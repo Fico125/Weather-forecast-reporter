@@ -1,0 +1,42 @@
+CREATE TABLE WeatherReport (
+    Id int PRIMARY KEY IDENTITY(1,1) NOT NULL,
+    coord_lon float NULL,
+    coord_lat float NULL,
+    base nvarchar(50) NULL,
+    main_temp float NULL,
+    main_feels_like float NULL,
+    main_temp_min float NULL,
+    main_temp_max float NULL,
+    main_pressure int NULL,
+    main_humidity int NULL,
+    main_sea_level int NULL,
+    main_grnd_level int NULL,
+    visibility int NULL,
+    wind_speed float NULL,
+    wind_deg int NULL,
+    wind_gust float NULL,
+    clouds_all int NULL,
+    rain_1h int NULL,
+    rain_3h int NULL,
+    snow_1h int NULL,
+    snow_3h int NULL,
+    dt int NULL,
+    sys_type int NULL,
+    sys_id int NULL,
+    sys_country nvarchar(50) NULL,
+    sys_sunrise int NULL,
+    sys_sunset int NULL,
+    name nvarchar(50) NULL,
+    cod int NULL,
+	timezone int NULL
+);
+
+CREATE TABLE Weather (
+    Id int PRIMARY KEY IDENTITY(1,1) NOT NULL,
+    weather_id int NOT NULL,
+    weather_main nvarchar(50) NULL,
+    weather_description nvarchar(50) NULL,
+    weather_icon nvarchar(50) NULL,
+    WeatherReportId int NOT NULL,
+    CONSTRAINT FK_WeatherReport_Weather FOREIGN KEY (WeatherReportId) REFERENCES WeatherReport(Id)
+);
