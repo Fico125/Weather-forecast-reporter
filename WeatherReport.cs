@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace WeatherReport
 {
+    /// <summary>
+    /// Represents JSON data retrieved from the OpenWeatherMap API.
+    /// </summary>
     public class WeatherReport
     {
         public Coord coord { get; set; }

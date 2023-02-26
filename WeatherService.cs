@@ -11,6 +11,9 @@ using WeatherReport.Data;
 
 namespace WeatherReport
 {
+    /// <summary>
+    /// Weather service is the service used to retrieve weather data from public API, store it into the database and report using Event Viewer.
+    /// </summary>
     public partial class WeatherService : ServiceBase
     {
         private const string API_KEY = "df146d8c3452593654e8ec0ffb54fd7e";
@@ -18,6 +21,7 @@ namespace WeatherReport
         private static readonly HttpClient client = new HttpClient();
         private readonly AppDatabase appDatabase = new AppDatabase();
         private readonly string cacheKey = "weatherReport";
+        private int retrieveTimerInterval = 300000;
         private int eventId = 1;
 
         public WeatherService()
@@ -29,34 +33,35 @@ namespace WeatherReport
 
             eventLogger = new EventLog();
 
-            if (!EventLog.SourceExists(eventSourceName)) EventLog.CreateEventSource(eventSourceName, logName);
+            if (!EventLog.SourceExists(eventSourceName))
+            {
+                EventLog.CreateEventSource(eventSourceName, logName);
+            }
 
             eventLogger.Source = eventSourceName;
             eventLogger.Log = logName;
         }
 
-        protected async void OnStartAsync()
+        protected override void OnStart(string[] args)
         {
-            // first timer, runs every x seconds and retrieves new weather data from OpenWeather API and stores it into the database.
+            // First timer, runs every 5 minutes and retrieves new weather data from OpenWeather API and stores it into the database.
             var retrievingAndStoringDataTimer = new Timer();
-            retrievingAndStoringDataTimer.Interval = 10000; // 10 seconds
+
+            retrievingAndStoringDataTimer.Interval = retrieveTimerInterval; // 5 minutes
             retrievingAndStoringDataTimer.Elapsed += RetrieveAndStoreNewWeatherDataAsync;
             retrievingAndStoringDataTimer.Start();
 
-            // second timer, runs every y seconds and reports weather data to Event Viewer.
+            // Second timer, runs every 10 minutes and reports weather data to Event Viewer.
             var reportingTimer = new Timer();
-            reportingTimer.Interval = 20000; // 20 seconds
+            reportingTimer.Interval = 600000; // 10 minutes
             reportingTimer.AutoReset = true;
             reportingTimer.Elapsed += ReportData;
             reportingTimer.Start();
         }
 
-        protected override void OnContinue()
-        {
-        }
-
         protected override void OnStop()
         {
+            eventLogger.WriteEntry("Weather service stopped.", EventLogEntryType.Information, eventId++);
         }
 
         private async void RetrieveAndStoreNewWeatherDataAsync(object sender, ElapsedEventArgs args)
@@ -87,9 +92,9 @@ namespace WeatherReport
                 /* We do not want to keep cached data too long to prevent running out of memory.
                  Cached data should stay cached until we get new data from the API, 
                 therefore absolute expiration should be set to value just short of the timer interval for queuing new data, 
-                so that new GET request can store new data into the cache.*/
+                so that new GET request can store new data into the cache. */
 
-                memoryCache.Add(cacheKey, fullWeatherReport, DateTimeOffset.UtcNow.AddSeconds(9));
+                memoryCache.Add(cacheKey, fullWeatherReport, DateTimeOffset.UtcNow.AddSeconds(retrieveTimerInterval - 1));
                 return weatherReport;
             }
             catch (HttpRequestException e)
@@ -104,14 +109,13 @@ namespace WeatherReport
         {
             try
             {
-                /* I've made ID a primary key of the sql table, so when I tried inserting a new value I was getting an error:
-                 * Cannot insert explicit value for identity column in table 'WeatherReport' when IDENTITY_INSERT is set to OFF. 
-                 * Because of this, I've set the ID to null which is not the ideal solution but for this scenario it will be sufficient. */
-
                 weatherReport.id = null;
-                var entry = appDatabase.WeatherReport.Add(weatherReport);
+                /* I've made ID a primary key of the sql table, so when I tried inserting a new value I was getting an error stating that I
+                 * cannot insert explicit value for identity column in table 'WeatherReport' when IDENTITY_INSERT is set to OFF. 
+                 * Because of this, I've here setting the ID to null which is not the ideal solution but for this scenario it will be sufficient. */
+
+                appDatabase.WeatherReport.Add(weatherReport);
                 await appDatabase.SaveChangesAsync();
-                Console.WriteLine("New data saved into the database.");
             }
             catch (Exception e)
             {
@@ -132,7 +136,7 @@ namespace WeatherReport
             }
             else
             {
-                // There's no cached response which means we have to query the database.
+                // There's no cached response which means we have to query the database and get the last report.
                 var latestDBEntry = appDatabase.WeatherReport.OrderByDescending(report => report.id).FirstOrDefault();
                 FormatAndLogData(latestDBEntry);
             }
@@ -141,15 +145,21 @@ namespace WeatherReport
         private void FormatAndLogData(WeatherReport weatherReport)
         {
             var tempOsc = weatherReport.main.temp_max - weatherReport.main.temp_min;
+
             var weatherReportEntry = "Location: " + weatherReport.name + "\nTimestamp: " + weatherReport.timestamp +
                                      "\nTemperature: " + weatherReport.main.temp +
                                      " °C\nBiggest temperature oscillation: " + tempOsc + " °C";
+
             eventLogger.WriteEntry(weatherReportEntry);
         }
 
-        internal async void TestStartupAndStopAsync()
+        /// <summary>
+        /// Method used to test the functionality of the service while debuggining.
+        /// </summary>
+        internal void TestStartupAndStop()
         {
-            OnStartAsync();
+            string[] args = null;
+            OnStart(args);
             OnStop();
             Console.ReadLine();
         }

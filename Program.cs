@@ -1,15 +1,14 @@
 ﻿using System;
 using System.ServiceProcess;
-using System.Threading.Tasks;
 
 namespace WeatherReport
 {
     internal static class Program
     {
         /// <summary>
-        ///     The main entry point for the application.
+        /// The main entry point for the application.
         /// </summary>
-        private static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
             if (args != null && args.Length == 1 && args[0].Length > 1
                 && (args[0][0] == '-' || args[0][0] == '/'))
@@ -32,7 +31,7 @@ namespace WeatherReport
             if (Environment.UserInteractive)
             {
                 var service1 = new WeatherService();
-                service1.TestStartupAndStopAsync();
+                service1.TestStartupAndStop();
             }
             else
             {
