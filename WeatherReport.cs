@@ -16,7 +16,6 @@ namespace WeatherReport
         public Snow snow { get; set; }
         public int dt { get; set; }
         public Sys sys { get; set; }
-        [Column("timezone")]
         public int timezone { get; set; }
         public int? id { get; set; }
         public string name { get; set; }

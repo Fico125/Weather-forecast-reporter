@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ServiceProcess;
+using System.Threading.Tasks;
 
 namespace WeatherReport
 {
@@ -8,12 +9,12 @@ namespace WeatherReport
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             if (Environment.UserInteractive)
             {
                 WeatherService service1 = new WeatherService(args);
-                service1.TestStartupAndStop();
+                service1.TestStartupAndStopAsync();
             }
             else
             {
