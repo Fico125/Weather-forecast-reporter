@@ -20,16 +20,12 @@ namespace WeatherReport
         private readonly string cacheKey = "weatherReport";
         private int eventId = 1;
 
-        public WeatherService(string[] args)
+        public WeatherService()
         {
             InitializeComponent();
 
             var eventSourceName = "WeatherReportSourceEvent";
             var logName = "WeatherReportLogger";
-
-            if (args.Length > 0) eventSourceName = args[0];
-
-            if (args.Length > 1) logName = args[1];
 
             eventLogger = new EventLog();
 

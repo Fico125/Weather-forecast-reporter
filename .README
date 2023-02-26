@@ -3,4 +3,4 @@ Windows service used to retrieve & report weather data.
 - Weather data is retrieved using OpenWeatherMap API in combination with the lattitude and longitude of the desired place.
 - Retrieved data is stored into an MSSQL Express database.
 - Service implements caching mechanism so reduce the need for accessing underlying slower storage layer.
-- Service reports average temperature and the biggest temperature oscillation.
+- Service reports location, timestamp, average temperature and the biggest temperature oscillation in Event Viewer.
