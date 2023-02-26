@@ -7,13 +7,13 @@ namespace WeatherReport
     internal static class Program
     {
         /// <summary>
-        /// The main entry point for the application.
+        ///     The main entry point for the application.
         /// </summary>
-        static async Task Main(string[] args)
+        private static async Task Main(string[] args)
         {
             if (Environment.UserInteractive)
             {
-                WeatherService service1 = new WeatherService(args);
+                var service1 = new WeatherService(args);
                 service1.TestStartupAndStopAsync();
             }
             else
@@ -21,7 +21,7 @@ namespace WeatherReport
                 ServiceBase[] ServicesToRun;
                 ServicesToRun = new ServiceBase[]
                 {
-                new WeatherService(args)
+                    new WeatherService(args)
                 };
                 ServiceBase.Run(ServicesToRun);
             }

@@ -1,9 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace WeatherReport
+namespace WeatherReport.Data
 {
     internal class AppDatabase : DbContext
     {
+        public DbSet<WeatherReport> WeatherReport { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer(@"Server=localhost\SQLEXPRESS;Database=master;Trusted_Connection=True");
@@ -54,10 +56,7 @@ namespace WeatherReport
                     wind.Property(w => w.gust).HasColumnName("wind_gust");
                 });
 
-                entity.OwnsOne(e => e.clouds, clouds =>
-                {
-                    clouds.Property(c => c.all).HasColumnName("clouds_all");
-                });
+                entity.OwnsOne(e => e.clouds, clouds => { clouds.Property(c => c.all).HasColumnName("clouds_all"); });
 
                 entity.OwnsOne(e => e.rain, rain =>
                 {
@@ -91,8 +90,5 @@ namespace WeatherReport
                 entity.Property(e => e.timestamp).HasColumnName("timestamp");
             });
         }
-
-        public DbSet<WeatherReport> WeatherReport { get; set; }
     }
 }
-

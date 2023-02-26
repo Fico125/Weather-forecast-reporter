@@ -7,41 +7,33 @@ using System.Runtime.Caching;
 using System.ServiceProcess;
 using System.Threading.Tasks;
 using System.Timers;
+using WeatherReport.Data;
 
 namespace WeatherReport
 {
     public partial class WeatherService : ServiceBase
     {
-        private int eventId = 1;
         private const string API_KEY = "df146d8c3452593654e8ec0ffb54fd7e";
         private static readonly MemoryCache memoryCache = MemoryCache.Default;
-        private string cacheKey = "weatherReport";
-        static readonly HttpClient client = new HttpClient();
-        private AppDatabase appDatabase = new AppDatabase();
+        private static readonly HttpClient client = new HttpClient();
+        private readonly AppDatabase appDatabase = new AppDatabase();
+        private readonly string cacheKey = "weatherReport";
+        private int eventId = 1;
 
         public WeatherService(string[] args)
         {
             InitializeComponent();
 
-            string eventSourceName = "WeatherReportSourceEvent";
-            string logName = "WeatherReportLogger";
+            var eventSourceName = "WeatherReportSourceEvent";
+            var logName = "WeatherReportLogger";
 
-            if (args.Length > 0)
-            {
-                eventSourceName = args[0];
-            }
+            if (args.Length > 0) eventSourceName = args[0];
 
-            if (args.Length > 1)
-            {
-                logName = args[1];
-            }
+            if (args.Length > 1) logName = args[1];
 
             eventLogger = new EventLog();
 
-            if (!EventLog.SourceExists(eventSourceName))
-            {
-                EventLog.CreateEventSource(eventSourceName, logName);
-            }
+            if (!EventLog.SourceExists(eventSourceName)) EventLog.CreateEventSource(eventSourceName, logName);
 
             eventLogger.Source = eventSourceName;
             eventLogger.Log = logName;
@@ -50,16 +42,16 @@ namespace WeatherReport
         protected async void OnStartAsync()
         {
             // first timer, runs every x seconds and retrieves new weather data from OpenWeather API and stores it into the database.
-            Timer retrievingAndStoringDataTimer = new Timer();
+            var retrievingAndStoringDataTimer = new Timer();
             retrievingAndStoringDataTimer.Interval = 10000; // 10 seconds
-            retrievingAndStoringDataTimer.Elapsed += new ElapsedEventHandler(RetrieveAndStoreNewWeatherDataAsync);
+            retrievingAndStoringDataTimer.Elapsed += RetrieveAndStoreNewWeatherDataAsync;
             retrievingAndStoringDataTimer.Start();
 
             // second timer, runs every y seconds and reports weather data to Event Viewer.
-            Timer reportingTimer = new Timer();
+            var reportingTimer = new Timer();
             reportingTimer.Interval = 20000; // 20 seconds
             reportingTimer.AutoReset = true;
-            reportingTimer.Elapsed += new ElapsedEventHandler(ReportData);
+            reportingTimer.Elapsed += ReportData;
             reportingTimer.Start();
         }
 
@@ -75,10 +67,7 @@ namespace WeatherReport
         {
             eventLogger.WriteEntry("Retrieving and storing new weather data", EventLogEntryType.Information, eventId++);
             var weatherReport = await RetrieveWeatherDataAsync();
-            if (weatherReport != null)
-            {
-                WriteDataIntoDatabaseAsync(weatherReport);
-            }
+            if (weatherReport != null) WriteDataIntoDatabaseAsync(weatherReport);
         }
 
         private async Task<WeatherReport> RetrieveWeatherDataAsync()
@@ -88,11 +77,14 @@ namespace WeatherReport
             {
                 // TODO: Extract lattitude and longitude so that user could set them prior to service installation. 
 
-                HttpResponseMessage responseMessage = await client.GetAsync("https://api.openweathermap.org/data/2.5/weather?lat=45.81&lon=15.96&units=metric&appid=" + API_KEY);
+                var responseMessage =
+                    await client.GetAsync(
+                        "https://api.openweathermap.org/data/2.5/weather?lat=45.81&lon=15.96&units=metric&appid=" +
+                        API_KEY);
                 responseMessage.EnsureSuccessStatusCode();
 
-                string responseBody = await responseMessage.Content.ReadAsStringAsync();
-                WeatherReport weatherReport = JsonConvert.DeserializeObject<WeatherReport>(responseBody);
+                var responseBody = await responseMessage.Content.ReadAsStringAsync();
+                var weatherReport = JsonConvert.DeserializeObject<WeatherReport>(responseBody);
                 weatherReport.timestamp = DateTime.Now;
                 var fullWeatherReport = JsonConvert.SerializeObject(weatherReport);
 
@@ -101,12 +93,12 @@ namespace WeatherReport
                 therefore absolute expiration should be set to value just short of the timer interval for queuing new data, 
                 so that new GET request can store new data into the cache.*/
 
-                memoryCache.Add(cacheKey, fullWeatherReport, DateTimeOffset.UtcNow.AddSeconds(59));
+                memoryCache.Add(cacheKey, fullWeatherReport, DateTimeOffset.UtcNow.AddSeconds(9));
                 return weatherReport;
             }
             catch (HttpRequestException e)
             {
-                var errorMsg = "There was an exception while getting the data from the server. Exception: " + e.ToString();
+                var errorMsg = "There was an exception while getting the data from the server. Exception: " + e;
                 eventLogger.WriteEntry(errorMsg, EventLogEntryType.Error, eventId++);
                 return null;
             }
@@ -127,7 +119,8 @@ namespace WeatherReport
             }
             catch (Exception e)
             {
-                var errorMsg = "An exception happened during the process of storing the data in the database. Exception: " + e.ToString();
+                var errorMsg =
+                    "An exception happened during the process of storing the data in the database. Exception: " + e;
                 eventLogger.WriteEntry(errorMsg, EventLogEntryType.Error, eventId++);
             }
         }
@@ -152,7 +145,9 @@ namespace WeatherReport
         private void FormatAndLogData(WeatherReport weatherReport)
         {
             var tempOsc = weatherReport.main.temp_max - weatherReport.main.temp_min;
-            var weatherReportEntry = "Location: " + weatherReport.name + "\nTimestamp: " + weatherReport.timestamp + "\nTemperature: " + weatherReport.main.temp + " °C\nBiggest temperature oscillation: " + tempOsc + " °C";
+            var weatherReportEntry = "Location: " + weatherReport.name + "\nTimestamp: " + weatherReport.timestamp +
+                                     "\nTemperature: " + weatherReport.main.temp +
+                                     " °C\nBiggest temperature oscillation: " + tempOsc + " °C";
             eventLogger.WriteEntry(weatherReportEntry);
         }
 
