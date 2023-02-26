@@ -28,7 +28,8 @@ CREATE TABLE WeatherReport (
     sys_sunset int NULL,
     name nvarchar(50) NULL,
     cod int NULL,
-	timezone int NULL
+	timezone int NULL,
+	timestamp DATETIME NULL
 );
 
 CREATE TABLE Weather (

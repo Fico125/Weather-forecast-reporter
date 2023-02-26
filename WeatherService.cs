@@ -93,13 +93,15 @@ namespace WeatherReport
 
                 string responseBody = await responseMessage.Content.ReadAsStringAsync();
                 WeatherReport weatherReport = JsonConvert.DeserializeObject<WeatherReport>(responseBody);
+                weatherReport.timestamp = DateTime.Now;
+                var fullWeatherReport = JsonConvert.SerializeObject(weatherReport);
 
                 /* We do not want to keep cached data too long to prevent running out of memory.
                  Cached data should stay cached until we get new data from the API, 
                 therefore absolute expiration should be set to value just short of the timer interval for queuing new data, 
                 so that new GET request can store new data into the cache.*/
 
-                memoryCache.Add(cacheKey, responseBody, DateTimeOffset.UtcNow.AddSeconds(59));
+                memoryCache.Add(cacheKey, fullWeatherReport, DateTimeOffset.UtcNow.AddSeconds(59));
                 return weatherReport;
             }
             catch (HttpRequestException e)
@@ -150,7 +152,7 @@ namespace WeatherReport
         private void FormatAndLogData(WeatherReport weatherReport)
         {
             var tempOsc = weatherReport.main.temp_max - weatherReport.main.temp_min;
-            var weatherReportEntry = "Location: " + weatherReport.name + ", Temperature: " + weatherReport.main.temp + " °C, biggest temperature oscillation: " + tempOsc + " °C";
+            var weatherReportEntry = "Location: " + weatherReport.name + "\nTimestamp: " + weatherReport.timestamp + "\nTemperature: " + weatherReport.main.temp + " °C\nBiggest temperature oscillation: " + tempOsc + " °C";
             eventLogger.WriteEntry(weatherReportEntry);
         }
 

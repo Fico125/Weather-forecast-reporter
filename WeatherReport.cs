@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WeatherReport
@@ -20,6 +21,7 @@ namespace WeatherReport
         public int? id { get; set; }
         public string name { get; set; }
         public int cod { get; set; }
+        public DateTime timestamp { get; set; }
     }
 
     public class Coord

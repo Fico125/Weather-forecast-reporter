@@ -87,6 +87,8 @@ namespace WeatherReport
                 entity.Property(e => e.name).HasColumnName("name");
 
                 entity.Property(e => e.cod).HasColumnName("cod");
+
+                entity.Property(e => e.timestamp).HasColumnName("timestamp");
             });
         }
 
