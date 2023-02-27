@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
@@ -76,11 +77,12 @@ namespace WeatherReport
             // Calling asynchronous network methods in a try/catch block to handle exceptions.
             try
             {
-                // TODO: Extract lattitude and longitude so that user could set them prior to service installation. 
+                var latitute = ConfigurationManager.AppSettings["latitude"];
+                var longitude = ConfigurationManager.AppSettings["longitude"];
 
                 var responseMessage =
                     await client.GetAsync(
-                        "https://api.openweathermap.org/data/2.5/weather?lat=45.81&lon=15.96&units=metric&appid=" +
+                        "https://api.openweathermap.org/data/2.5/weather?lat=" + latitute + "&lon=" + longitude + "&units=metric&appid=" +
                         API_KEY);
                 responseMessage.EnsureSuccessStatusCode();
 

@@ -8,6 +8,9 @@ Windows service used to retrieve & report weather data.
 To install the service: 
 1. Build the solution.
 2. Copy the bin/Debug output to a desired location where you'd like to store the service files.
+3. Adjust WeatherReport.exe.config file and change latitude & longitude key values to match your desired location.
+		<add key="latitude" value="45.22" />
+		<add key="longitude" value="13.59" />
 3. Open Windows Powershell as an administrator.
 4. Type "WeatherReport.exe -install".
 5. To uninstall the service type "WeatherReport.exe -uninstall".
