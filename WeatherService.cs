@@ -17,7 +17,7 @@ namespace WeatherReport
     /// </summary>
     public partial class WeatherService : ServiceBase
     {
-        private const string API_KEY = "df146d8c3452593654e8ec0ffb54fd7e";
+        private readonly string API_KEY = ConfigurationManager.AppSettings["API_KEY"];
         private static readonly MemoryCache memoryCache = MemoryCache.Default;
         private static readonly HttpClient client = new HttpClient();
         private readonly AppDatabase appDatabase = new AppDatabase();
