@@ -17,6 +17,8 @@ To install the service:
 			<add name="DatabaseConnection" providerName="System.Data.SqlClient"
 				  connectionString="Server=*YOUR_SERVER_NAME*;Database=*YOUR_DATABASE_NAME*;Trusted_Connection=True" />
 		</connectionStrings>
+	3.3 Change API_KEY value to match your OpenWeatherMap API key.
+		<add key="API_KEY" value="YOUR_API_KEY_VALUE" />
 3. Open Windows Powershell as an administrator.
 4. Type "WeatherReport.exe -install".
 5. To uninstall the service type "WeatherReport.exe -uninstall".
