@@ -88,7 +88,7 @@ namespace WeatherReport
 
                 var responseBody = await responseMessage.Content.ReadAsStringAsync();
                 var weatherReport = JsonConvert.DeserializeObject<WeatherReport>(responseBody);
-                weatherReport.timestamp = DateTime.Now;
+                weatherReport.Timestamp = DateTime.Now;
                 var fullWeatherReport = JsonConvert.SerializeObject(weatherReport);
 
                 /* We do not want to keep cached data too long to prevent running out of memory.
@@ -111,7 +111,7 @@ namespace WeatherReport
         {
             try
             {
-                weatherReport.id = null;
+                weatherReport.Id = null;
                 /* I've made ID a primary key of the sql table, so when I tried inserting a new value I was getting an error stating that I
                  * cannot insert explicit value for identity column in table 'WeatherReport' when IDENTITY_INSERT is set to OFF. 
                  * Because of this, I've here setting the ID to null which is not the ideal solution but for this scenario it will be sufficient. */
@@ -139,17 +139,17 @@ namespace WeatherReport
             else
             {
                 // There's no cached response which means we have to query the database and get the last report.
-                var latestDBEntry = appDatabase.WeatherReport.OrderByDescending(report => report.id).FirstOrDefault();
+                var latestDBEntry = appDatabase.WeatherReport.OrderByDescending(report => report.Id).FirstOrDefault();
                 FormatAndLogData(latestDBEntry);
             }
         }
 
         private void FormatAndLogData(WeatherReport weatherReport)
         {
-            var tempOsc = weatherReport.main.temp_max - weatherReport.main.temp_min;
+            var tempOsc = weatherReport.Main.Temp_max - weatherReport.Main.Temp_min;
 
-            var weatherReportEntry = "Location: " + weatherReport.name + "\nTimestamp: " + weatherReport.timestamp +
-                                     "\nTemperature: " + weatherReport.main.temp +
+            var weatherReportEntry = "Location: " + weatherReport.Name + "\nTimestamp: " + weatherReport.Timestamp +
+                                     "\nTemperature: " + weatherReport.Main.Temp +
                                      " °C\nBiggest temperature oscillation: " + tempOsc + " °C";
 
             eventLogger.WriteEntry(weatherReportEntry);
