@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Configuration;
 
 namespace WeatherReport.Data
 {
@@ -8,7 +9,8 @@ namespace WeatherReport.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(@"Server=localhost\SQLEXPRESS;Database=master;Trusted_Connection=True");
+            var connStrings = ConfigurationManager.ConnectionStrings["DatabaseConnection"].ConnectionString;
+            optionsBuilder.UseSqlServer(connStrings);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
